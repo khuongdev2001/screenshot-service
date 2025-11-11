@@ -1,6 +1,7 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
 const sharp = require('sharp');
+const { sleep } = require('./utils');
 const app = express();
 
 const minimal_args = [
@@ -51,6 +52,7 @@ app.get('/screenshot', async (req, res) => {
     }
     const width = req.query.width || 800;
     const height = req.query.height || 1000;
+    const delay = req.query.delay || 1000;
     const browser = await puppeteer.launch({
         headless: true,
         executablePath: '/usr/bin/google-chrome',
@@ -62,8 +64,10 @@ app.get('/screenshot', async (req, res) => {
         height: Number(height),
     })
     try {
-        const result = await page.goto(url);
-        console.log(result.status());
+        await page.goto(url, { "waitUntil": "networkidle0" });
+        if (delay) {
+            await sleep(delay);
+        }
         const imageBuffer = await page.screenshot({
             encoding: 'binary',
             type: 'webp',
@@ -71,11 +75,11 @@ app.get('/screenshot', async (req, res) => {
         await browser.close();
         res.set('Content-Type', 'image/png');
         res.send(await sharp(imageBuffer)
-            .toFormat('webp', {quality: 100})
+            .toFormat('webp', { quality: 100 })
             .toBuffer());
         return true;
     }
-    catch (e){
+    catch (e) {
         res.statusCode = 403;
         res.send('url invalid');
         return false;
