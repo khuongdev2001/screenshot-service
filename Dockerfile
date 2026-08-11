@@ -1,6 +1,6 @@
 # Filename: Dockerfile
 
-FROM node:slim
+FROM node:22-slim
 
 # We don't need the standalone Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
